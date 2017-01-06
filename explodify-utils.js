@@ -1,17 +1,18 @@
 // explodify helper functions
 
 var fs = require('fs')
-// var xmlmapping = require('xml-mapping')
+var xmlmapping = require('xml-mapping')
 
 function buildReferenceTree(wsdlUri) {
 	// Todo: verify that we got a file, and not a URL
 
-	
 	// fileHandle -> fileContents
-	var contents = file.readFileSync(wsdlUri)
-
-	// fileContents -> object representing valid xml hierarchy
+	var contents = fs.readFileSync(wsdlUri, 'utf8');
 	
+	// fileContents -> object representing valid xml hierarchy
+	var simpleWsdl = convertXmlToJson(contents)
+
+	console.log(simpleWsdl)
 
 
 	// OH MY GOD MAGIC GOES HERE
@@ -20,8 +21,8 @@ function buildReferenceTree(wsdlUri) {
 
 	// json of wsdl -> reference tree
 
-	buildLookupTables(referenceTreeRoot)
-	return referenceTreeRoot
+	// buildLookupTables(referenceTreeRoot)
+	// return referenceTreeRoot
 }
 
 function buildLookupTables(referenceTreeRoot) {
@@ -57,6 +58,7 @@ function mergeLookupTables(dest, source) {
 }
 
 function produceSimpleVersion(xmlObj) {
+	console.log(typeof xmlObj)
 	if(typeof xmlObj === 'object') {
 		console.log(Object.keys(xmlObj))
 		var result = {}
@@ -73,24 +75,21 @@ function produceSimpleVersion(xmlObj) {
 	else return xmlObj
 }
 
-function convertXmlToJson(req, res, next) {
+function convertXmlToJson(body) {
 	try {
-		if(!req.internal) {
-			req.internal = {}
-		}
-		req.internal.xmlWithNoNamespace = req.body.replace(/<(\/*)([^:]+:)/g, "<$1").replace(/\n/g, "") // remove namespace abbreviations
-		console.log(typeof xmlmapping.load(req.internal.xmlWithNoNamespace))
-		req.internal.jsonFromXml = produceSimpleVersion(xmlmapping.load(req.internal.xmlWithNoNamespace))
+		// body = "<xs:schema>5 \
+		// </xs:schema>"
+		// remove namespace abbreviations
+		var xmlWithNoNamespace = body.replace(/<(\/*)([^:]+:)/g, "<$1")//.replace(/\n/g, "") 
+		return produceSimpleVersion(xmlmapping.load(xmlWithNoNamespace))
 	} catch (err) {
 		console.log(err)
 	}
-	next()
 }
 
 
-module.exports = [
-	buildReferenceTree,
-	buildLookupTables,
-	mergeLookupTables
-	]
-
+module.exports = {
+	buildReferenceTree:buildReferenceTree,
+	buildLookupTables:buildLookupTables,
+	mergeLookupTables:mergeLookupTables
+}

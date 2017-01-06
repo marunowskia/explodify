@@ -6,8 +6,16 @@ var rootnode = {
 	id:1,
 	children: [
 		{id:2, name:"childnode1"},
-		{id:3 name:"childnode2", children:[{id:4,name:"childnode2_childnode1"}]},
+		{id:3, name:"childnode2", children:[{id:4,name:"childnode2_childnode1"}]},
 		{id:5, name:"rootnode", children:[{ id:6,name:"childnode2", children:[{id:7,name:"childnode2_childnode1"}]}]}
 	]
 }
-explodify_utils[1](rootnode)
+explodify_utils.buildLookupTables(rootnode)
+
+console.log(rootnode)
+
+var dataTree = {
+	childnode1:""
+}
+
+explodify_utils.buildReferenceTree('../resources/DeviceService0.xsd')
