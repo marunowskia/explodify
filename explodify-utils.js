@@ -1,7 +1,7 @@
 // explodify helper functions
 
 var fs = require('fs')
-var xmlmapping = require('xml-mapping')
+// var xmlmapping = require('xml-mapping')
 
 function buildReferenceTree(wsdlUri) {
 	// Todo: verify that we got a file, and not a URL
@@ -12,6 +12,8 @@ function buildReferenceTree(wsdlUri) {
 
 	// fileContents -> object representing valid xml hierarchy
 	
+
+
 	// OH MY GOD MAGIC GOES HERE
 	// We'll start with only wsdls that don't allow recursion in the message body.
 	// XXX
@@ -23,17 +25,35 @@ function buildReferenceTree(wsdlUri) {
 }
 
 function buildLookupTables(referenceTreeRoot) {
-	
-	var lookupTable = {}
-	
-	if(referenceTreeRoot.children) {
-		//XXX
-	}
-	else {
-		//XXX
-	}
+	// ===========================================================================================================================
+	// For each json element in the data tree, we need to find all possible assignments of that node to an element in the reference tree
+	// Therefore, for a given node in the reference tree we need to be able to accept an element name and give back all possible places that node can get matched to.
+	// ===========================================================================================================================
 
+	// Any element that matches this reference tree node's name can be mapped to this reference tree node.
+	var lookupTable = {[referenceTreeRoot.name]:[referenceTreeRoot]} // lol, javascript is silly
 	referenceTreeRoot.lookupTable = lookupTable
+	
+	var children = referenceTreeRoot.children
+	if(children) {
+		console.log(children)
+		for(var idx in children) {
+			var child = children[idx]
+			buildLookupTables(child)
+			mergeLookupTables(lookupTable, child.lookupTable)
+		}
+	}
+}
+
+function mergeLookupTables(dest, source) {
+	for(key in source) {
+		if(dest[key]) {
+			dest[key] = dest[key].concat(source[key])
+		}
+		else {
+			dest[key] = source[key].concat([])
+		}
+	}
 }
 
 function produceSimpleVersion(xmlObj) {
@@ -68,4 +88,9 @@ function convertXmlToJson(req, res, next) {
 }
 
 
-module.exports = buildReferenceTree
+module.exports = [
+	buildReferenceTree,
+	buildLookupTables,
+	mergeLookupTables
+	]
+
