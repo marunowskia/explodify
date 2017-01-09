@@ -3,6 +3,44 @@
 var fs = require('fs')
 var xmlmapping = require('xml-mapping')
 
+function fitToStructure(dataVal, dataLabel, referenceRoot) {
+	
+	console.log(dataVal)
+	if(dataVal == null || dataLabel == null) {
+		return null
+	}
+
+	// Super naive implementation.
+	// Lacks ability to conditionalize the validity of an assignment on the existence of other children.
+
+	var possibleAssignments = referenceRoot.lookupTable[dataLabel]
+	var result = [/* what should this actually return? */]
+
+	var dataChildren = []
+	
+	// if(dataVal[Symbol.iterator]) {
+	// 	dataChildren = dataVal
+	// }
+	// for(dataChildLabel in dataChildren) {
+	for(dataChildLabel in dataVal) {
+		console.log(dataChildLabel)
+		var foundPossibleSubstructure = false
+		for(referenceChild in possibleAssignments) {
+			
+            // A substructure is a single valid mapping from every child element of dataChild to a corresponding element in the tree of referenceChild
+			possibleSubstructure = fitToStructure(dataChild, referenceChild)
+			if(possibleSubstructure) {
+				possibleSubstructure.push({dataNode: dataVal, referenceNode: referenceChild})
+				result.push(referenceChild * possibleSubstructure)
+				foundPossibleSubstructure = true             
+			}
+        }
+		if(!foundPossibleSubstructure) {
+			return null
+		}
+	}
+}
+
 function buildReferenceTree(wsdlUri) {
 	// Todo: verify that we got a file, and not a URL
 
@@ -32,7 +70,9 @@ function buildLookupTables(referenceTreeRoot) {
 	// ===========================================================================================================================
 
 	// Any element that matches this reference tree node's name can be mapped to this reference tree node.
-	var lookupTable = {[referenceTreeRoot.name]:[referenceTreeRoot]} // lol, javascript is silly
+	var lookupTable = {}
+	lookupTable[referenceTreeRoot.name] = referenceTreeRoot
+	//var lookupTable = {[referenceTreeRoot.name]:[referenceTreeRoot]} // lol, javascript is silly
 	referenceTreeRoot.lookupTable = lookupTable
 	
 	var children = referenceTreeRoot.children
@@ -47,12 +87,13 @@ function buildLookupTables(referenceTreeRoot) {
 }
 
 function mergeLookupTables(dest, source) {
+
 	for(key in source) {
 		if(dest[key]) {
-			dest[key] = dest[key].concat(source[key])
+			dest[key] = [].concat(dest[key]).concat(source[key])
 		}
 		else {
-			dest[key] = source[key].concat([])
+			dest[key] = [].concat(source[key])
 		}
 	}
 }
@@ -91,5 +132,7 @@ function convertXmlToJson(body) {
 module.exports = {
 	buildReferenceTree:buildReferenceTree,
 	buildLookupTables:buildLookupTables,
-	mergeLookupTables:mergeLookupTables
+	mergeLookupTables:mergeLookupTables,
+	convertXmlToJson:convertXmlToJson,
+	fitToStructure: fitToStructure
 }

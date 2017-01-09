@@ -1,1 +1,7 @@
 var explodify = require('../explodify.js')
+var explodify_utils = require('../explodify-utils.js')
+var testObjects = require('./testObjects.js')
+console.log(testObjects)
+explodify_utils.buildLookupTables(testObjects.referenceRoot)
+var structured = explodify_utils.fitToStructure(testObjects.dataRoot, "node", testObjects.referenceRoot)
+console.log(structured)
